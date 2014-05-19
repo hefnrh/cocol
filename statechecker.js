@@ -1,5 +1,6 @@
 var db = require('./dbdriver');
 var crypter = require('./crypter');
+var fs = require('./fsdriver');
 
 var INTERVAL = 60000;
 var userList = {};
@@ -142,9 +143,15 @@ exports.createGame = function(token, name, pw, callback) {
 	      if (err) {
 		callback(err, null, null);
 	      } else {
-		userList[token].game = id;
-		gameList[id] = 1;
-		callback(null, true, id);
+		fs.createGame(id, function(err) {
+		  if (err) {
+		    callback(err, null, null);
+		  } else {
+		    userList[token].game = id;
+		    gameList[id] = 1;
+		    callback(null, true, id);
+		  }
+		});
 	      }
 	    });
 	  }
