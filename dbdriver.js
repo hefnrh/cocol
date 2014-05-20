@@ -156,7 +156,19 @@ exports.insertGame = function(uid, name, pw, saltString, callback) {
 	    if (err) {
 	      callback(err, null);
 	    } else {
-	      callback(null, gid);
+	      db.collection('counters', function(err, col) {
+		if (err) {
+		  callback(err, null);
+		} else {
+		  col.insert({type: 'eventid', gid: gid, seq: 0}, function(err, result) {
+		    if (err) {
+		      callback(err, null);
+		    } else {
+		      callback(null, gid);
+		    }
+		  });
+		}
+	      });
 	    }
 	  });
         }
@@ -202,7 +214,13 @@ var deleteAllGameResource = function(gid, callback) {
 	if (err) {
 	  callback(err);
 	} else {
-	  deleteGameResource(gid, 'pictures', callback);
+	  deleteGameResource(gid, 'pictures', function(err) {
+	    if (err) {
+	      callback(err);
+	    } else {
+	      deleteGameResource(gid, 'counters', callback);
+	    }
+	  });
 	}
       });
     }
@@ -244,4 +262,3 @@ exports.getGameMember = function(gid, type, callback) {
     }
   });
 };
-
