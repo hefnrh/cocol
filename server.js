@@ -104,7 +104,7 @@ var createGame = function(req, res) {
       if (!data.token || !data.gamePassword || !data.gameName) {
 	res.end(JSON.stringify({result: ERROR, message: 'post token, game name and game password'}));
       } else {
-	statechecker.createGame(data.token, data.gameName, data.gamePassword, function(err, success, id) {
+	statechecker.createGame(decodeURIComponent(data.token), data.gameName, data.gamePassword, function(err, success, id) {
 	  if (err) {
 	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	  } else {
@@ -119,6 +119,30 @@ var createGame = function(req, res) {
     }
   });
 };
+
+var deleteGame = function(req, res) {
+  loadJsonData(req, function(err, data) {
+    if (err) {
+      res.end(JSON.stringify({result: ERROR, message: 'data format error'}));
+    } else {
+      if (!data.token || !data.gamePassword || !data.gameID) {
+	res.end(JSON.stringify({result: ERROR, message: 'post token, game name and game id'}));
+      } else {
+	statechecker.deleteGame(decodeURIComponent(data.token), data.gameID, data.gamePassword, function(err, success) {
+	  if (err) {
+	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
+	  } else {
+	    if (!success) {
+	      res.end(JSON.stringify({result: ERROR, message: 'login out of data or you are not creater of the game'}));
+	    } else {
+	      res.end(JSON.stringify({result: OK, message: 'delete game success'}));
+	    }
+	  }
+	});
+      }
+    }
+  });
+};	      
 
 http.createServer(function(req, res) {
   var parsedUrl = url.parse(req.url);
@@ -143,6 +167,9 @@ http.createServer(function(req, res) {
       break;
     case '/coc/creategame':
       createGame(req, res);
+      break;
+    case '/coc/deletegame':
+      deleteGame(req, res);
       break;
     default: res.end(JSON.stringify({result: ERROR, message: 'operation not found'}));
   }

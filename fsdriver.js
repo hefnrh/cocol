@@ -1,4 +1,5 @@
 var fs = require('fs');
+var rmdir = require('rimraf');
 
 var NGINX_PATH = '/usr/share/nginx/www/';
 var SOUND = '/sound';
@@ -23,7 +24,7 @@ exports.createGame = function(gid, callback) {
 };
 
 exports.deleteGame = function(gid, callback) {
-  fs.rmdir(NGINX_PATH + gid, function(err) {
+  rmdir(NGINX_PATH + gid, function(err) {
     callback(err);
   });
 };

@@ -58,18 +58,14 @@ exports.isUsernameExisted = function(un, callback) {
 	if (err) {
 	  callback(err, null);
 	} else {
-	  if (item != null) {
-	    callback(null, true);
-	  } else {
-	    callback(null, false);
-	  }
+	  callback(null, item != null);
 	}
       });
     }
   });
 };
 
-exports.getIDPWSalt = function(un, callback) {
+exports.getUIDPWSalt = function(un, callback) {
   db.collection('users', function(err, col) {
     if (err) {
       callback(err, null, null, null);
@@ -89,17 +85,33 @@ exports.getIDPWSalt = function(un, callback) {
   });
 };
 
+exports.getGIDPWSalt = function(gid, callback) {
+  db.collection('games', function(err, col) {
+    if (err) {
+      callback(err, null, null);
+    } else {
+      col.findOne({_id:gid}, function(err, item) {
+	if (err) {
+	  callback(err, null, null);
+	} else {
+	  if (item == null) {
+	    callback(null, null, null);
+	  } else {
+	    callback(null, item.password, item.salt);
+	  }
+	}
+      });
+    }
+  });
+};
+
 exports.changePW = function(un, npw, nsalt, callback) {
   db.collection('users', function(err, col) {
     if (err) {
       callback(err);
     } else {
       col.update({username: un}, {$set: {password: npw, salt: nsalt}}, function(err, result) {
-	if (err) {
-	  callback(err);
-	} else {
-	  callback(null);
-	}
+	callback(err);
       });
     }
   });
@@ -114,11 +126,7 @@ exports.isGameNameExisted = function(name, callback) {
 	if (err) {
 	  callback(err, null);
 	} else {
-	  if (item != null) {
-	    callback(null, true);
-	  } else {
-	    callback(null, false);
-	  }
+	  callback(null, item != null);
 	}
       });
     }
@@ -130,13 +138,7 @@ exports.joinGame = function(uid, gid, callback) {
     if (err) {
       callback(err, null);
     } else {
-      col.update({_id: gid}, {$addToSet: {player: uid}}, function(err, result) {
-	if (err) {
-	  callback(err, null);
-	} else {
-	  callback(null, result);
-	}
-      });
+      col.update({_id: gid}, {$addToSet: {player: uid}}, callback);
     }
   });
 };
@@ -172,13 +174,71 @@ exports.gameList = function(callback) {
 	if (err) {
 	  callback(err, null);
 	} else {
-	  curcor.toArray(function(err, docs) {
-	    if (err) {
-	      callback(err, null);
-	    } else {
-	      callback(null, docs);
-	    }
-	  });
+	  curcor.toArray(callback);
+	}
+      });
+    }
+  });
+};
+
+var deleteGameResource = function(gid, type, callback) {
+  db.collection(type, function(err, col) {
+    if (err) {
+      callback(err);
+    } else {
+      col.remove({gid:gid}, function(err, num) {
+	callback(err);
+      });
+    }
+  });
+};
+
+var deleteAllGameResource = function(gid, callback) {
+  deleteGameResource(gid, 'events', function(err) {
+    if (err) {
+      callback(err);
+    } else {
+      deleteGameResource(gid, 'sounds', function(err) {
+	if (err) {
+	  callback(err);
+	} else {
+	  deleteGameResource(gid, 'pictures', callback);
+	}
+      });
+    }
+  });
+};
+
+exports.deleteGame = function(gid, callback) {
+  db.collection('games', function(err, col) {
+    if (err) {
+      callback(err);
+    } else {
+      col.remove({_id:gid}, function(err, num) {
+	if (err) {
+	  callback(err);
+	} else {
+	  deleteAllGameResource(gid, callback);
+	}
+      });
+    }
+  });
+};
+
+exports.getGameMember = function(gid, type, callback) {
+  db.collection('games', function(err, col) {
+    if (err) {
+      callback(err, null);
+    } else {
+      col.findOne({_id:gid}, function(err, item) {
+	if (err) {
+	  callback(err, null);
+	} else {
+	  if (!item) {
+	    callback(null, null);
+	  } else {
+	    callback(null, item[type]);
+	  }
 	}
       });
     }

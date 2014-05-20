@@ -7,9 +7,9 @@ var userList = {};
 var gameList = {};
 
 var verifyPW = function(un, pw, callback) {
-  db.getIDPWSalt(un, function(err, uid, pwInDB, salt) {
+  db.getUIDPWSalt(un, function(err, uid, pwInDB, salt) {
     if (err) {
-      callback(err, null);
+      callback(err, null, null);
     } else {
       if (!pwInDB) {
 	callback(null, false, null);
@@ -19,6 +19,26 @@ var verifyPW = function(un, pw, callback) {
 	    callback(null, false, null);
 	  } else {
 	    callback(null, true, uid);
+	  }
+	});
+      }
+    }
+  });
+};
+
+var verifyGPW = function(gid, pw, callback) {
+  db.getGIDPWSalt(gid, function(err, pwInDB, salt) {
+    if (err) {
+      callback(err, null);
+    } else {
+      if (!pwInDB) {
+	callback(null, false);
+      } else {
+	crypter.encodePasswordWithSalt(pw, salt, function(err, key) {
+	  if (key != pwInDB) {
+	    callback(null, false);
+	  } else {
+	    callback(null, true);
 	  }
 	});
       }
@@ -101,7 +121,6 @@ exports.changePW = function(un, pw, npw, callback) {
   });
 };
 
-
 exports.login = function(un, pw, callback) {
   verifyPW(un, pw, function(err, success, uid) {
     if (err) {
@@ -157,6 +176,42 @@ exports.createGame = function(token, name, pw, callback) {
 	  }
 	});
       }
+    }
+  });
+};
+
+exports.deleteGame = function(token, gid, gpw, callback) {
+  if (!isUserOnline(token)) {
+    callback(null, false);
+    return;
+  }
+  db.getGameMember(gid, 'user', function(err, user) {
+    if (user != userList[token].uid) {
+      callback(null, false);
+    } else {
+      verifyGPW(gid, gpw, function(err, success) {
+	if (err) {
+	  callback(err, null);
+	} else {
+	  if (!success) {
+	    callback(null, false);
+	  } else {
+	    db.deleteGame(gid, function(err) {
+	      if (err) {
+		callback(err, null);
+	      } else {
+		fs.deleteGame(gid, function(err) {
+		  if (err) {
+		    callback(err, null);
+		  } else {
+		    callback(null, true);
+		  }
+		});
+	      }
+	    })
+	  }
+	}
+      });
     }
   });
 };
