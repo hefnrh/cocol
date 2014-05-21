@@ -27,6 +27,22 @@ var generateId = function(typeName, callback) {
   });
 };
 
+var generateEventId = function(gid, callback) {
+  db.collection('counters', function(err, col) {
+    if (err) {
+      callback(err, null);
+    } else {
+      col.findAndModify({gid: gid}, {seq: 1}, {$inc: {seq: 1}}, function(err, doc) {
+	if (err) {
+	  callback(err, null);
+	} else {
+	  callback(null, doc.seq);
+	}
+      });
+    }
+  });
+};
+
 exports.insertUser = function(un, pw, saltString, callback) {
   db.collection('users', function(err, col) {
     if (err) {
@@ -177,6 +193,18 @@ exports.insertGame = function(uid, name, pw, saltString, callback) {
   });
 };
 
+exports.insertCharacter = function(uid, gid, name, detail, pic, font, callback) {
+  db.collection('characters', function(err, col) {
+    if (err) {
+      callback(err);
+    } else {
+      col.insert({uid: uid, gid: gid, name: name, detail: detail, picture: pic, font: font}, function(err, result) {
+	callback(err);
+      });
+    }
+  });
+};
+
 exports.gameList = function(callback) {
   db.collection('games', function(err, col) {
     if (err) {
@@ -218,7 +246,13 @@ var deleteAllGameResource = function(gid, callback) {
 	    if (err) {
 	      callback(err);
 	    } else {
-	      deleteGameResource(gid, 'counters', callback);
+	      deleteGameResource(gid, 'counters', function(err) {
+		if (err) {
+		  callback(err);
+		} else {
+		  deleteGameResource(gid, 'characters', callback);
+		}
+	      });
 	    }
 	  });
 	}
@@ -243,7 +277,7 @@ exports.deleteGame = function(gid, callback) {
   });
 };
 
-exports.getGameMember = function(gid, type, callback) {
+exports.getGameMembers = function(gid, type, callback) {
   db.collection('games', function(err, col) {
     if (err) {
       callback(err, null);
@@ -258,6 +292,84 @@ exports.getGameMember = function(gid, type, callback) {
 	    callback(null, item[type]);
 	  }
 	}
+      });
+    }
+  });
+};
+
+exports.getEvents = function(gid, callback) {
+  db.collection('events', function(err, col) {
+    if (err) {
+      callback(err, null);
+    } else {
+      col.find({gid: gid}, {sort: [['eid', 1]]}, function (err, curcor) {
+	if (err) {
+	  callback(err, null);
+	} else {
+	  curcor.toArray(callback);
+	}
+      });
+    }
+  });
+};
+
+exports.getFiles = function(gid, type, callback) {
+  db.collecntion(type, function(err, col) {
+    if (err) {
+      callback(err, null);
+    } else {
+      col.find({gid:gid}, function(err, curcor) {
+	if (err) {
+	  callback(err, null);
+	} else {
+	  curcor.toArray(callback);
+	}
+      });
+    }
+  });
+};
+
+exports.getCharacters = function(uid, gid, callback) {
+  db.collection('characters', function(err, col) {
+    if (err) {
+      callback(err, null);
+    } else {
+      col.find({uid: uid, gid: gid}, {name: 1, detail: 1, picture: 1, font: 1}, function(err, curcor) {
+	if (err) {
+	  callback(err);
+	} else {
+	  curcor.toArray(callback);
+	}
+      });
+    }
+  });
+};
+
+exports.insertEvent = function(gid, eve, callback) {
+  generateEventId(gid, function(err, id) {
+    if (err) {
+      callback(err);
+    } else {
+      db.collecton('events', function(err, col) {
+	if (err) {
+	  callback(err);
+	} else {
+	  col.insert({_id: id, gid: gid, event: eve}, function(err, result) {
+	    callback(err);
+	  });
+	}
+      });
+    }
+  });
+};
+
+exports.insertFile = function(gid, type, filename, callback) {
+  db.collection(type, function(err, col) {
+    if (err) {
+      callback(err, null);
+    } else {
+      col.insert({gid: gid, filename: filename}, function(err, result) {
+	callback(err);
       });
     }
   });
