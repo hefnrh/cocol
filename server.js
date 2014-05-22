@@ -126,7 +126,7 @@ var deleteGame = function(req, res) {
       res.end(JSON.stringify({result: ERROR, message: 'data format error'}));
     } else {
       if (!data.token || !data.gamePassword || !data.gameID) {
-	res.end(JSON.stringify({result: ERROR, message: 'post token, game name and game id'}));
+	res.end(JSON.stringify({result: ERROR, message: 'post token, game password and game id'}));
       } else {
 	statechecker.deleteGame(decodeURIComponent(data.token), data.gameID, data.gamePassword, function(err, success) {
 	  if (err) {
@@ -143,6 +143,30 @@ var deleteGame = function(req, res) {
     }
   });
 };	      
+
+var joinGame = function(req, res) {
+  loadJsonData(req, function(err, data) {
+    if (err) {
+      res.end(JSON.stringify({result: ERROR, message: 'data format error'}));
+    } else {
+      if (!data.token || !data.gamePassword || !data.gameID) {
+	res.end(JSON.stringify({result: ERROR, message: 'post token, game password and game id'}));
+      } else {
+	statechecker.joinGame(decodeURIComponent(data.token), data.gameID, data.gamePassword, function(err, success) {
+	  if (err) {
+	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
+	  } else {
+	    if (!success) {
+	      res.end(JSON.stringify({result: ERROR, message: 'login out of data or game password wrong'}));
+	    } else {
+	      res.end(JSON.stringify({result: OK, message: 'enter game success'}));
+	    }
+	  }
+	});
+      }
+    }
+  });
+};
 
 http.createServer(function(req, res) {
   var parsedUrl = url.parse(req.url);
@@ -170,6 +194,9 @@ http.createServer(function(req, res) {
       break;
     case '/coc/deletegame':
       deleteGame(req, res);
+      break;
+    case '/coc/entergame':
+      joinGame(req, res);
       break;
     default: res.end(JSON.stringify({result: ERROR, message: 'operation not found'}));
   }

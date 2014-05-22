@@ -1,6 +1,7 @@
 var db = require('./dbdriver');
 var crypter = require('./crypter');
 var fs = require('./fsdriver');
+var cache = require('./datacache');
 
 var INTERVAL = 60000;
 var userList = {};
@@ -216,13 +217,50 @@ exports.deleteGame = function(token, gid, gpw, callback) {
   });
 };
 
+exports.joinGame = function(token, gid, gpw, callback) {
+  if (!isUserOnline(token)) {
+    callback(null, false);
+    return;
+  }
+  verifyGPW(gid, gpw, function(err, success) {
+    if (err) {
+      callback(err, null);
+    } else {
+      if (!success) {
+	callback(null, false);
+      } else {
+	db.joinGame(userList[token].uid, gid, function(err, result) {
+	  if (err) {
+	    callback(err, null);
+	  } else {
+	    if (userList[token].game >= 0) {
+	      --gameList[userList[token].game];
+	      if (gameList[userList[token].game] === 0) {
+		cache.removeCache(userList[token].game);
+		delete gameList[userList[token].game];
+	      }
+	    }
+	    userList[token].game = gid;
+	    if (gameList[gid]) {
+	      ++gameList[gid];
+	    } else {
+	      gameList[gid] = 1;
+	    }
+	    callback(null, true);
+	  }
+	});
+      }
+    }
+  });
+};
+
 setInterval(function() {
   for (var u in userList) {
     if (userList[u].offline) {
       if (gameList[userList[u].game]) {
 	--gameList[userList[u].game];
 	if (!gameList[userList[u].game]) {
-	  // TODO clean up data cache
+	  cache.removeCache(userList[u].game);
 	  delete gameList[userList[u].game];
 	}
       }
