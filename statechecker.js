@@ -56,6 +56,22 @@ var isUserOnline = function(token) {
   }
 };
 
+var increaseGamePlayer = function(gid) {
+  if (gameList[gid] >= 0) {
+    ++gameList[gid];
+  } else {
+    gameList[gid] = 1;
+  }
+};
+
+var decreaseGamePlayer = function(gid) {
+  if (gameList[gid] >= 2) {
+    --gameList[gid];
+  } else {
+    cache.removeCache(gid);
+    delete gameList[gid];
+  }
+};
 
 exports.signUp = function(un, pw, callback) {
   db.isUsernameExisted(un, function(err, exist) {
@@ -233,25 +249,28 @@ exports.joinGame = function(token, gid, gpw, callback) {
 	  if (err) {
 	    callback(err, null);
 	  } else {
+	    increaseGamePlayer(gid);
 	    if (userList[token].game >= 0) {
-	      --gameList[userList[token].game];
-	      if (gameList[userList[token].game] === 0) {
-		cache.removeCache(userList[token].game);
-		delete gameList[userList[token].game];
-	      }
+	      decreaseGamePlayer(userList[token].game);
 	    }
 	    userList[token].game = gid;
-	    if (gameList[gid]) {
-	      ++gameList[gid];
-	    } else {
-	      gameList[gid] = 1;
-	    }
 	    callback(null, true);
 	  }
 	});
       }
     }
   });
+};
+
+exports.leaveGame = function(token, gid, callback) {
+  if (!isUserOnline(token)) {
+    callback(null, true);
+    return;
+  }
+  if (userList[token].game === gid) {
+    decreaseGamePlayer(gid);
+  }
+  callback(null, true);
 };
 
 setInterval(function() {
