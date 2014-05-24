@@ -336,7 +336,23 @@ exports.getCharacters = function(uid, gid, callback) {
     } else {
       col.find({uid: uid, gid: gid}, {name: 1, detail: 1, picture: 1, font: 1}, function(err, curcor) {
 	if (err) {
-	  callback(err);
+	  callback(err, null);
+	} else {
+	  curcor.toArray(callback);
+	}
+      });
+    }
+  });
+};
+
+exports.getAllCharacters = function(gid, callback) {
+  db.collection('characters', function(err, col) {
+    if (err) {
+      callback(err, null);
+    } else {
+      col.find({gid: gid}, {name: 1, detail: 1, picture: 1, font: 1}, function(err, curcor) {
+	if (err) {
+	  callback(err, null);
 	} else {
 	  curcor.toArray(callback);
 	}

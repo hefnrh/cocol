@@ -273,6 +273,42 @@ exports.leaveGame = function(token, gid, callback) {
   callback(null, true);
 };
 
+exports.getCharacter = function(token, gid, callback) {
+  if (!isUserOnline(token)) {
+    callback(null, null);
+    return;
+  }
+  if (userList[token].game === gid) {
+    db.getCharacters(userList[token].uid, gid, callback);
+  } else {
+    callback(null, []);
+  }
+};
+
+exports.getAllCharacters = function(token, gid, callback) {
+  if (!isUserOnline(token)) {
+    callback(null, null);
+    return;
+  }
+  if (userList[token].game === gid) {
+    db.getAllCharacters(gid, callback);
+  } else {
+    callback(null, []);
+  }
+};
+
+exports.getFiles = function(token, gid, type, callback) {
+  if (!isUserOnline(token)) {
+    callback(null, null);
+    return;
+  }
+  if (userList[token].game === gid) {
+    db.getFiles(gid, type, callback);
+  } else {
+    callback(null, null);
+  }
+};
+
 setInterval(function() {
   for (var u in userList) {
     if (userList[u].offline) {
