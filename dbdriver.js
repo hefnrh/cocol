@@ -350,11 +350,11 @@ exports.getEvents = function(gid, callback) {
 };
 
 exports.getFiles = function(gid, type, callback) {
-  db.collecntion(type, function(err, col) {
+  db.collection(type, function(err, col) {
     if (err) {
       callback(err, null);
     } else {
-      col.find({gid:gid}, function(err, curcor) {
+      col.find({gid:gid}, {_id: 0, filename: 1}, function(err, curcor) {
 	if (err) {
 	  callback(err, null);
 	} else {
@@ -370,7 +370,7 @@ exports.getCharacters = function(uid, gid, callback) {
     if (err) {
       callback(err, null);
     } else {
-      col.find({uid: uid, gid: gid}, {name: 1, detail: 1, picture: 1, font: 1}, function(err, curcor) {
+      col.find({uid: uid, gid: gid}, {_id: 0, name: 1, detail: 1, picture: 1, font: 1}, function(err, curcor) {
 	if (err) {
 	  callback(err, null);
 	} else {
@@ -386,7 +386,7 @@ exports.getAllCharacters = function(gid, callback) {
     if (err) {
       callback(err, null);
     } else {
-      col.find({gid: gid}, {name: 1, detail: 1, picture: 1, font: 1}, function(err, curcor) {
+      col.find({gid: gid}, {_id: 0, name: 1, detail: 1, picture: 1, font: 1}, function(err, curcor) {
 	if (err) {
 	  callback(err, null);
 	} else {

@@ -3,6 +3,7 @@ var crypter = require('./crypter');
 var fs = require('./fsdriver');
 var cache = require('./datacache');
 var dispatcher = require('./eventdispatcher');
+var formidable = require('formidable');
 
 var INTERVAL = 600000;
 var userList = {};
@@ -304,7 +305,15 @@ exports.getFiles = function(token, gid, type, callback) {
     return;
   }
   if (userList[token].game === gid) {
-    db.getFiles(gid, type, callback);
+    db.getFiles(gid, type, function(err, list) {
+      if (err) {
+	callback(err, null);
+      } else {
+	callback(null, list.map(function(ele) {
+	  return ele.filename;
+	}));
+      }
+    });
   } else {
     callback(null, null);
   }
@@ -329,6 +338,68 @@ exports.postEvent = function(token, gid, eve, callback) {
   }
   if (userList[token].game === gid) {
     dispatcher.insertEvent(userList[token].uid, gid, eve, callback);
+  } else {
+    callback(null, false);
+  }
+};
+
+exports.uploadPic = function(token, gid, req, callback) {
+  if (!isUserOnline(token)) {
+    callback(null, false);
+    return;
+  }
+  if (userList[token].game === gid) {
+    var form = new formidable.IncomingForm();
+    form.maxFieldsSize = 5 * 1024 * 1024; // 5MB
+    form.uploadDir = fs.uploadDir + gid + fs.pictureDir;
+    form.parse(req, function(err, fields, files) {
+      if (err) {
+	callback(err, null);
+      } else if (!files.picture) {
+	callback(null, false);
+      } else {
+	fs.rename(files.picture.path, form.uploadDir + '/' + files.picture.name, function(err) {
+	  if (err) {
+	    callback(err, null);
+	  } else {
+	    db.updatePicture(gid, files.picture.name, false, false, false, 0, 0, function(err) {
+	      callback(err, err === null);
+	    });
+	  }
+	});
+      }
+    });
+  } else {
+    callback(null, false);
+  }
+};
+
+exports.uploadSound = function(token, gid, req, callback) {
+  if (!isUserOnline(token)) {
+    callback(null, false);
+    return;
+  }
+  if (userList[token].game === gid) {
+    var form = new formidable.IncomingForm();
+    form.maxFieldsSize = 10 * 1024 * 1024; // 10MB
+    form.uploadDir = fs.uploadDir + gid + fs.soundDir;
+    form.parse(req, function(err, fields, files) {
+      if (err) {
+	callback(err, null);
+      } else if (!files.sound) {
+	callback(null, false);
+      } else {
+	fs.rename(files.sound.path, form.uploadDir + '/' + files.sound.name, function(err) {
+	  if (err) {
+	    callback(err, null);
+	  } else {
+	    db.insertSound(gid, files.sound.name, function(err) {
+	      callback(err, err === null);
+	    });
+	  }
+	});
+      }
+    });
   } else {
     callback(null, false);
   }

@@ -44,7 +44,7 @@ var insertEvent = function(uid, gid, eve, callback) {
       });
       break;
     case 6: // move photo
-      db.updataPhoto(gid, eve.name, eve.visible, eve.x, function(err) {
+      db.updatePhoto(gid, eve.name, eve.visible, eve.x, function(err) {
         if (err) {
 	  callback(err);
 	} else {
