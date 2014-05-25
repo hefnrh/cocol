@@ -2,6 +2,7 @@ var db = require('./dbdriver');
 var crypter = require('./crypter');
 var fs = require('./fsdriver');
 var cache = require('./datacache');
+var dispatcher = require('./eventdispatcher');
 
 var INTERVAL = 60000;
 var userList = {};
@@ -306,6 +307,30 @@ exports.getFiles = function(token, gid, type, callback) {
     db.getFiles(gid, type, callback);
   } else {
     callback(null, null);
+  }
+};
+
+exports.getEvents = function(token, gid, fromId, callback) {
+  if (!isUserOnline(token)) {
+    callback(null, null);
+    return;
+  }
+  if (userList[token].game === gid) {
+    cache.getEvents(gid, fromId, callback);
+  } else {
+    callback(null, null);
+  }
+};
+
+exports.postEvent = function(token, gid, eve, callback) {
+  if (!isUserOnline(token)) {
+    callback(null);
+    return;
+  }
+  if (userList[token].game === gid) {
+    dispatcher.insertEvent(userList[token].uid, gid, eve callback);
+  } else {
+    callback(null);
   }
 };
 

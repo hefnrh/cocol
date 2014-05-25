@@ -14,16 +14,34 @@ var loadEventData = function(gid, callback) {
 };
 
 var saveEvent = function(gid, eve, callback) {
-  db.insertEvent(gid, eve, function(err) {
-    if (err) {
-      callback(err);
-    } else {
-      eventData[gid][eventData[gid].length] = {_id:eventData[gid].length, gid: gid, event: eve};
-      callback(null);
-    }
-  });
+  if (!eventData[gid]) {
+    loadEventData(gid, function(err) {
+      if (err) {
+	callback(err);
+      } else {
+	db.insertEvent(gid, eve, function(err) {
+	  if (err) {
+	    callback(err);
+	  } else {
+	    eventData[gid][eventData[gid].length] = {_id:eventData[gid].length, gid: gid, event: eve};
+	    callback(null);
+	  }
+	});
+      }
+    });
+  } else {
+    db.insertEvent(gid, eve, function(err) {
+      if (err) {
+        callback(err);
+      } else {
+        eventData[gid][eventData[gid].length] = {_id:eventData[gid].length, gid: gid, event: eve};
+	callback(null);
+      }
+    });
+  }
 };
 
+// TODO filter private message
 var getEvents = function(gid, fromId, callback) {
   if (!eventData[gid]) {
     loadEventData(gid, function(err) {

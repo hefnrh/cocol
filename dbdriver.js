@@ -198,7 +198,31 @@ exports.insertCharacter = function(uid, gid, name, detail, pic, font, callback) 
     if (err) {
       callback(err);
     } else {
-      col.insert({uid: uid, gid: gid, name: name, detail: detail, picture: pic, font: font}, function(err, result) {
+      col.update({uid: uid, gid: gid, name: name}, {$set: {detail: detail, picture: pic, font: font}}, {upsert: true}, function(err, result) {
+	callback(err);
+      });
+    }
+  });
+};
+
+exports.updateData = function(gid, data, callback) {
+  db.collection('data', function(err, col) {
+    if (err) {
+      callback(err);
+    } else {
+      col.update({gid: gid}, {$set: {data: data}}, {upsert: true}, function (err, num) {
+	callback(err);
+      });
+    }
+  });
+};
+
+exports.updateNote = function(gid, note, callback) {
+  db.collection('notes', function(err, col) {
+    if (err) {
+      callback(err);
+    } else {
+      col.update({gid: gid}, {$set: {note: note}}, {upsert: true}, function (err, num) {
 	callback(err);
       });
     }
@@ -250,7 +274,19 @@ var deleteAllGameResource = function(gid, callback) {
 		if (err) {
 		  callback(err);
 		} else {
-		  deleteGameResource(gid, 'characters', callback);
+		  deleteGameResource(gid, 'characters', function(err) {
+		    if (err) {
+		      callback(err);
+		    } else {
+		      deleteGameResource(gid, 'notes', function(err) {
+			if (err) {
+			  callback(err);
+			} else {
+			  deleteGameResource(gid, 'data', callback);
+			}
+		      });
+		    }
+		  });
 		}
 	      });
 	    }
@@ -379,13 +415,67 @@ exports.insertEvent = function(gid, eve, callback) {
   });
 };
 
-exports.insertFile = function(gid, type, filename, callback) {
-  db.collection(type, function(err, col) {
+exports.insertSound = function(gid, filename, callback) {
+  db.collection('sounds', function(err, col) {
     if (err) {
       callback(err, null);
     } else {
       col.insert({gid: gid, filename: filename}, function(err, result) {
 	callback(err);
+      });
+    }
+  });
+};
+
+exports.updatePicture = function(gid, filename, bg, avatar, photo, x, y, callback) {
+  db.collection('pictures', function(err, col) {
+    if (err) {
+      callback(err, null);
+    } else {
+      col.update({gid: gid, filename: filename}, {$set:{background: bg, avatar: avatar, photo: photo, x: x, y: y}}, {upsert: true}, function(err, result) {
+	callback(err);
+      });
+    }
+  });
+};
+
+exports.setBackground = function(gid, filename, callback) {
+  db.collection('pictures', function(err, col) {
+    if (err) {
+      callback(err, null);
+    } else {
+      col.update({gid: gid, background: true}, {$set: {background: false}}, function(err, num) {
+	if (err) {
+	  callback(err, null);
+	} else {
+	  col.update({gid: gid, filename: filename}, {$set:{background: true}}, function(err, num) {
+	    callback(err);
+	  });
+	}
+      });
+    }
+  });
+};
+
+exports.updateAvatar = function(gid, filename, visible, x, y, callback) {
+  db.collection('pictures', function(err, col) {
+    if (err) {
+      callback(err, null);
+    } else {
+      col.update({gid: gid, filename: filename}, {$set: {avatar: visible, x: x, y: y}}, function(err, num) {
+	callback(err);
+      });
+    }
+  });
+};
+
+exports.updatePhoto = function(gid, filename, visible, x, callback) {
+  db.collection('pictures', function(err, col) {
+    if (err) {
+      callback(err, null);
+    } else {
+      col.update({gid: gid, filename: filename}, {$set: {photo: visible, x: x}}, function(err, num) {
+        callback(err);
       });
     }
   });
