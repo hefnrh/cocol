@@ -2,12 +2,18 @@ var db = require('./dbdriver');
 
 var eventData = {};
 
+var map = function(eveInDB) {
+  var ret = eveInDB.event;
+  ret.eventID = eveInDB.eid;
+  return ret;
+}
+
 var loadEventData = function(gid, callback) {
-  db.getEvent(gid, function(err, events) {
+  db.getEvents(gid, function(err, events) {
     if (err) {
       callback(err);
     } else {
-      eventData[gid] = events;
+      eventData[gid] = events.map(map);
       callback(null);
     }
   });
@@ -23,7 +29,8 @@ var saveEvent = function(gid, eve, callback) {
 	  if (err) {
 	    callback(err);
 	  } else {
-	    eventData[gid][eventData[gid].length] = {_id:eventData[gid].length, gid: gid, event: eve};
+	    eve.eventID = eventData[gid].length;
+	    eventData[gid][eventData[gid].length] = eve;
 	    callback(null);
 	  }
 	});
@@ -34,7 +41,8 @@ var saveEvent = function(gid, eve, callback) {
       if (err) {
         callback(err);
       } else {
-        eventData[gid][eventData[gid].length] = {_id:eventData[gid].length, gid: gid, event: eve};
+	eve.eventID = eventData[gid].length;
+        eventData[gid][eventData[gid].length] = eve;
 	callback(null);
       }
     });

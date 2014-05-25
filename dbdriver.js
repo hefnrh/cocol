@@ -313,7 +313,7 @@ exports.deleteGame = function(gid, callback) {
   });
 };
 
-exports.getGameMembers = function(gid, type, callback) {
+exports.getGameMember = function(gid, type, callback) {
   db.collection('games', function(err, col) {
     if (err) {
       callback(err, null);
@@ -402,11 +402,11 @@ exports.insertEvent = function(gid, eve, callback) {
     if (err) {
       callback(err);
     } else {
-      db.collecton('events', function(err, col) {
+      db.collection('events', function(err, col) {
 	if (err) {
 	  callback(err);
 	} else {
-	  col.insert({_id: id, gid: gid, event: eve}, function(err, result) {
+	  col.insert({eid: id, gid: gid, event: eve}, function(err, result) {
 	    callback(err);
 	  });
 	}

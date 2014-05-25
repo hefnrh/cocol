@@ -4,7 +4,7 @@ var fs = require('./fsdriver');
 var cache = require('./datacache');
 var dispatcher = require('./eventdispatcher');
 
-var INTERVAL = 60000;
+var INTERVAL = 600000;
 var userList = {};
 var gameList = {};
 
@@ -324,13 +324,13 @@ exports.getEvents = function(token, gid, fromId, callback) {
 
 exports.postEvent = function(token, gid, eve, callback) {
   if (!isUserOnline(token)) {
-    callback(null);
+    callback(null, false);
     return;
   }
   if (userList[token].game === gid) {
-    dispatcher.insertEvent(userList[token].uid, gid, eve callback);
+    dispatcher.insertEvent(userList[token].uid, gid, eve, callback);
   } else {
-    callback(null);
+    callback(null, false);
   }
 };
 

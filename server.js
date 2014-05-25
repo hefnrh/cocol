@@ -157,7 +157,7 @@ var joinGame = function(req, res) {
 	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	  } else {
 	    if (!success) {
-	      res.end(JSON.stringify({result: ERROR, message: 'login out of data or game password wrong'}));
+	      res.end(JSON.stringify({result: ERROR, message: 'login out of date or game password wrong'}));
 	    } else {
 	      res.end(JSON.stringify({result: OK, message: 'enter game success'}));
 	    }
@@ -180,7 +180,11 @@ var getCharacter = function(req, res) {
 	  if (err) {
 	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	  } else {
-	    res.end(JSON.stringify({result: OK, message: 'enter game success', characterList: characters}));
+	    if (characters == null) {
+	      res.end(JSON.stringify({result: ERROR, message: 'login out of date or you are not in the game'}));
+	    } else {
+	      res.end(JSON.stringify({result: OK, message: 'enter game success', characterList: characters}));
+	    }
 	  }
 	});
       }
@@ -201,7 +205,11 @@ var getAllCharacters = function(req, res) {
 	  if (err) {
 	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	  } else {
-	    res.end(JSON.stringify({result: OK, message: 'enter game success', characterList: characters}));
+	    if (characters == null) {
+	      res.end(JSON.stringify({result: ERROR, message: 'login out of date or you are not in the game'}));
+	    } else {
+	      res.end(JSON.stringify({result: OK, message: 'enter game success', characterList: characters}));
+	    }
 	  }
 	});
       }
@@ -225,15 +233,23 @@ var getFiles = function(req, res) {
 	      if (err) {
 	        res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	      } else {
-	        ret.pictures = pics;
-		statechecker.getFiles(token, data.gameID, 'sounds', function(err, sounds) {
-		  if (err) {
-		    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
-		  } else {
-		    ret.sounds = sounds;
-		    res.end(JSON.stringify(ret));
-		  }
-		});
+		if (pics == null) {
+		  res.end(JSON.stringify({result: ERROR, message: 'login out of date or you are not in the game'}));
+		} else {
+		  ret.pictures = pics;
+		  statechecker.getFiles(token, data.gameID, 'sounds', function(err, sounds) {
+		    if (err) {
+		      res.end(JSON.stringify({result: ERROR, message: 'server error'}));
+		    } else {
+		      if (sounds == null) {
+			res.end(JSON.stringify({result: ERROR, message: 'login out of date or you are not in the game'}));
+		      } else {
+			ret.sounds = sounds;
+			res.end(JSON.stringify(ret));
+		      }
+		    }
+		  });
+		}
 	      }
 	    });
 	    break;
@@ -242,8 +258,12 @@ var getFiles = function(req, res) {
 	      if (err) {
 		res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	      } else {
-		ret.pictures = pics;
-		res.end(JSON.stringify(ret));
+		if (pics == null) {
+		  res.end(JSON.stringify({result: ERROR, message: 'login out of date or you are not in the game'}));
+		} else {
+		  ret.pictures = pics;
+		  res.end(JSON.stringify(ret));
+		}
 	      }
 	    });
 	    break;
@@ -252,13 +272,85 @@ var getFiles = function(req, res) {
 	      if (err) {
 		res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	      } else {
-		ret.sounds = sounds;
-		res.end(JSON.stringify(ret));
+		if (characters == null) {
+		  res.end(JSON.stringify({result: ERROR, message: 'login out of date or you are not in the game'}));
+		} else {
+		  ret.sounds = sounds;
+		  res.end(JSON.stringify(ret));
+		}
 	      }
 	    });
 	    break;
 	  default: res.end(JSON.stringify({result: ERROR, message: 'undefined operation'}));
 	}
+      }
+    }
+  });
+};
+
+var leaveGame = function(req, res) {
+  loadJsonData(req, function(err, data) {
+    if (err) {
+      res.end(JSON.stringify({result: ERROR, message: 'data format error'}));
+    } else {
+      if (!data.token || !data.gameID) {
+	res.end(JSON.stringify({result: ERROR, message: 'post token and game id'}));
+      } else {
+	statechecker.leaveGame(decodeURIComponent(data.token), data.gameID, function(err, success) {
+	  if (err) {
+	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
+	  } else {
+	    res.end(JSON.stringify({result: OK, message: 'leave game success'}));
+	  }
+	});
+      }
+    }
+  });
+};
+
+var fetch = function(req, res) {
+  loadJsonData(req, function(err, data) {
+    if (err) {
+      res.end(JSON.stringify({result: ERROR, message: 'data format error'}));
+    } else {
+      if (!data.token || !data.gameID || (!data.startEventID && data.startEventID !== 0)) {
+	res.end(JSON.stringify({result: ERROR, message: 'post token, start id and game id'}));
+      } else {
+	statechecker.getEvents(decodeURIComponent(data.token), data.gameID, data.startEventID, function(err, list) {
+	  if (err) {
+	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
+	  } else {
+	    if (list == null) {
+	      res.end(JSON.stringify({result: ERROR, message: 'login out of date or you are not in the game'}));
+	    } else {
+	      res.end(JSON.stringify({result: OK, message: 'fetch event success', eventList: list}));
+	    }
+	  }
+	});
+      }
+    }
+  });
+};
+
+var post = function(req, res) {
+  loadJsonData(req, function(err, data) {
+    if (err) {
+      res.end(JSON.stringify({result: ERROR, message: 'data format error'}));
+    } else {
+      if (!data.token || !data.gameID || !data.event) {
+	res.end(JSON.stringify({result: ERROR, message: 'post token, event and game id'}));
+      } else {
+	statechecker.postEvent(decodeURIComponent(data.token), data.gameID, data.event, function(err, success) {
+	  if (err) {
+	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
+	  } else {
+	    if (success === false) {
+	      res.end(JSON.stringify({result: ERROR, message: 'login out of date or you are not in the game'}));
+	    } else {
+	      res.end(JSON.stringify({result: OK, message: 'fetch event success'}));
+	    }
+	  }
+	});
       }
     }
   });
@@ -302,6 +394,21 @@ http.createServer(function(req, res) {
       break;
     case '/coc/resources':
       getFiles(req, res);
+      break;
+    case '/coc/leavegame':
+      leaveGame(req, res);
+      break;
+    case '/coc/fetch':
+      fetch(req, res);
+      break;
+    case '/coc/post':
+      post(req, res);
+      break;
+    case '/coc/getcharacter':
+      getCharacter(req, res);
+      break;
+    case '/coc/getallcharacters':
+      getAllCharacters(req, res);
       break;
     default: res.end(JSON.stringify({result: ERROR, message: 'operation not found'}));
   }
