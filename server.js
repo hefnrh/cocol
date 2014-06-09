@@ -104,7 +104,7 @@ var createGame = function(req, res) {
       if (!data.token || !data.gamePassword || !data.gameName) {
 	res.end(JSON.stringify({result: ERROR, message: 'post token, game name and game password'}));
       } else {
-	statechecker.createGame(decodeURIComponent(data.token).replace(/ /g, '+'), data.gameName, data.gamePassword, function(err, success, id) {
+	statechecker.createGame(data.token.replace(/ /g, '+'), data.gameName, data.gamePassword, function(err, success, id) {
 	  if (err) {
 	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	  } else {
@@ -128,7 +128,7 @@ var deleteGame = function(req, res) {
       if (!data.token || !data.gamePassword || !data.gameID) {
 	res.end(JSON.stringify({result: ERROR, message: 'post token, game password and game id'}));
       } else {
-	statechecker.deleteGame(decodeURIComponent(data.token).replace(/ /g, '+'), data.gameID, data.gamePassword, function(err, success) {
+	statechecker.deleteGame(data.token.replace(/ /g, '+'), data.gameID, data.gamePassword, function(err, success) {
 	  if (err) {
 	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	  } else {
@@ -152,7 +152,7 @@ var joinGame = function(req, res) {
       if (!data.token || !data.gamePassword || !data.gameID) {
 	res.end(JSON.stringify({result: ERROR, message: 'post token, game password and game id'}));
       } else {
-	statechecker.joinGame(decodeURIComponent(data.token).replace(/ /g, '+'), data.gameID, data.gamePassword, function(err, success) {
+	statechecker.joinGame(data.token.replace(/ /g, '+'), data.gameID, data.gamePassword, function(err, success) {
 	  if (err) {
 	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	  } else {
@@ -176,7 +176,7 @@ var getCharacter = function(req, res) {
       if (!data.token || !data.gameID) {
 	res.end(JSON.stringify({result: ERROR, message: 'post token and game id'}));
       } else {
-	statechecker.getCharacter(decodeURIComponent(data.token).replace(/ /g, '+'), data.gameID, function(err, characters) {
+	statechecker.getCharacter(data.token.replace(/ /g, '+'), data.gameID, function(err, characters) {
 	  if (err) {
 	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	  } else {
@@ -201,7 +201,7 @@ var getAllCharacters = function(req, res) {
       if (!data.token || !data.gameID) {
 	res.end(JSON.stringify({result: ERROR, message: 'post token and game id'}));
       } else {
-	statechecker.getAllCharacters(decodeURIComponent(data.token).replace(/ /g, '+'), data.gameID, function(err, characters) {
+	statechecker.getAllCharacters(data.token.replace(/ /g, '+'), data.gameID, function(err, characters) {
 	  if (err) {
 	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	  } else {
@@ -226,7 +226,7 @@ var getFiles = function(req, res) {
 	res.end(JSON.stringify({result: ERROR, message: 'post token, game id and type'}));
       } else {
 	var ret = {result: OK, message: 'enter game success'};
-	data.token = decodeURIComponent(data.token).replace(/ /g, '+');
+	data.token = data.token.replace(/ /g, '+');
 	switch (data.type) {
 	  case 0:
 	    statechecker.getFiles(data.token, data.gameID, 'pictures', function(err, pics) {
@@ -296,7 +296,7 @@ var leaveGame = function(req, res) {
       if (!data.token || !data.gameID) {
 	res.end(JSON.stringify({result: ERROR, message: 'post token and game id'}));
       } else {
-	statechecker.leaveGame(decodeURIComponent(data.token).replace(/ /g, '+'), data.gameID, function(err, success) {
+	statechecker.leaveGame(data.token.replace(/ /g, '+'), data.gameID, function(err, success) {
 	  if (err) {
 	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	  } else {
@@ -316,7 +316,7 @@ var fetch = function(req, res) {
       if (!data.token || !data.gameID || (!data.startEventID && data.startEventID !== 0)) {
 	res.end(JSON.stringify({result: ERROR, message: 'post token, start id and game id'}));
       } else {
-	statechecker.getEvents(decodeURIComponent(data.token).replace(/ /g, '+'), data.gameID, data.startEventID, function(err, list) {
+	statechecker.getEvents(data.token.replace(/ /g, '+'), data.gameID, data.startEventID, function(err, list) {
 	  if (err) {
 	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	  } else {
@@ -340,7 +340,7 @@ var post = function(req, res) {
       if (!data.token || !data.gameID || !data.event) {
 	res.end(JSON.stringify({result: ERROR, message: 'post token, event and game id'}));
       } else {
-	statechecker.postEvent(decodeURIComponent(data.token).replace(/ /g, '+'), data.gameID, data.event, function(err, success) {
+	statechecker.postEvent(data.token.replace(/ /g, '+'), data.gameID, data.event, function(err, success) {
 	  if (err) {
 	    res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	  } else {
@@ -411,7 +411,7 @@ http.createServer(function(req, res) {
       getAllCharacters(req, res);
       break;
     case '/coc/uploadpic':
-      statechecker.uploadPic(decodeURIComponent(parsedUrl.query.token).replace(/ /g, '+'), parseInt(parsedUrl.query.gameid), req, function(err, success) {
+      statechecker.uploadPic(parsedUrl.query.token.replace(/ /g, '+'), parseInt(parsedUrl.query.gameid), req, function(err, success) {
 	if (err) {
 	  res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	} else if (!success) {
@@ -422,7 +422,7 @@ http.createServer(function(req, res) {
       });
       break;
     case '/coc/uploadsound':
-      statechecker.uploadSound(decodeURIComponent(parsedUrl.query.token).replace(/ /g, '+'), parseInt(parsedUrl.query.gameid), req, function(err, success) {
+      statechecker.uploadSound(parsedUrl.query.token.replace(/ /g, '+'), parseInt(parsedUrl.query.gameid), req, function(err, success) {
 	if (err) {
 	  res.end(JSON.stringify({result: ERROR, message: 'server error'}));
 	} else if (!success) {
