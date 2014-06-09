@@ -14,6 +14,7 @@ var loadJsonData = function(req, callback) {
   req.on('end', function() {
     var jsonData = null;
     try {
+      data = decodeURIComponent(data);
       jsonData = JSON.parse(data);
     } catch (err) {
       callback(err, null);

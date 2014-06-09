@@ -5,7 +5,7 @@ var rand = function(min, max) {
   return min + Math.floor(Math.random() * (max - min));
 }
 
-var roll(time, size, condition, room) {
+var roll = function(time, size, condition, room) {
   var rollEve = {eventType: 0, fromCharacter: 'Cthulhu', room: room, color:'000000', size: 32};
   var content = time + 'd' + size + ' = ';
   try {
@@ -35,6 +35,7 @@ var roll(time, size, condition, room) {
 	  content += 'fail';
         }
       } catch (e) {}
+    }
     rollEve.content = content;
     return rollEve;
   } catch (err) {
