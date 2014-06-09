@@ -1,9 +1,75 @@
 var cache = require('./datacache');
 var db = require('./dbdriver');
 
+var rand = function(min, max) {
+  return min + Math.floor(Math.random() * (max - min));
+}
+
+var roll(time, size, condition, room) {
+  var rollEve = {eventType: 0, fromCharacter: 'Cthulhu', room: room, color:'000000', size: 32};
+  var content = time + 'd' + size + ' = ';
+  try {
+    time = eval(time);
+    size = eval(size);
+    var result = 0;
+    if (time === 1) {
+      result = rand(0, size) + 1;
+      content += result;
+    } else {
+      content += '[ ';
+      for (var i = 0; i < time; ++i) {
+	var tmp = rand(0, size) + 1;
+	result += tmp;
+	content += tmp + ' ';
+      }
+      content += '] = ' + result;
+    }
+    if (condition !== null) {
+      var success = false;
+      try {
+	success = eval(result + condition);
+	content += ' ' + condition + ' ';
+      if (success) {
+	  content += 'success';
+        } else {
+	  content += 'fail';
+        }
+      } catch (e) {}
+    rollEve.content = content;
+    return rollEve;
+  } catch (err) {
+    return null;
+  }
+}
+
+var matchRoll = function(str, room) {
+  var res = str.match(/^[0-9+\-*\/() ]+d[0-9+\-*\/() ]+[<>=0-9+\-*\/() ]+/);
+  if (!res) {
+    return null;
+  }
+  res = res[0];
+  var condition = res.match(/[<>=]+[0-9+\-*\/() ]+/);
+  if (condition) {
+    condition = condition[0];
+  }
+  res = res.split(/[<>=d]+/)
+  return roll(res[0], res[1], condition, room);
+}
+
 var insertEvent = function(uid, gid, eve, callback) {
   switch (eve.eventType) {
     case 0: // public message
+      cache.saveEvent(gid, eve, function(err) {
+	if (err) {
+	  callback(err);
+	} else {
+	  var cthulhu = matchRoll(eve.content, eve.room);
+	  if (cthulhu !== null) {
+	    cache.saveEvent(gid, cthulhu, callback);
+	  }
+	}
+      });
+      break;
     case 1: // private message
       cache.saveEvent(gid, eve, callback);
       break;
